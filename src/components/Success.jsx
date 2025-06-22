@@ -20,7 +20,7 @@ const Success = () => {
 
   const verifyPayment = async (sessionId) => {
     try {
-      const response = await fetch('http://localhost:5000/api/verify-payment', {
+const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/verify-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
