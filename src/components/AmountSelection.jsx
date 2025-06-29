@@ -51,17 +51,18 @@ const AmountSelection = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          gameId,
-          gameName: currentGame.name,
-          amount: parseFloat(amount.toFixed(2)),
-        }),
-      });
+const response = await fetch(`https://juwahouse.onrender.com/api/create-checkout-session`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    gameId,
+    gameName: currentGame.name,
+    amount: parseFloat(amount.toFixed(2)),
+  }),
+});
+
 
       const data = await response.json();
 
