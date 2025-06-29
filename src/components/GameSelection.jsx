@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Loader, CreditCard } from 'lucide-react';
-import '../loadCredits.css'; // Link to your custom CSS styles
+import '../LoadCredits.css'; // Link to your custom CSS styles
 
 // Load Stripe with your public key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
