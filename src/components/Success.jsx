@@ -20,7 +20,7 @@ const Success = () => {
 
   const verifyPayment = async (sessionId) => {
     try {
-const response = await fetch(`https://juwahouse.onrender.com/api/create-checkout-session`, {
+const response = await fetch(`https://juwahouse.onrender.com/api/verify-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

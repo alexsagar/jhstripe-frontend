@@ -1,62 +1,122 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Loader, CreditCard } from 'lucide-react';
+import '../loadCredits.css'; // Link to your custom CSS styles
 
-const GameSelection = () => {
-  const navigate = useNavigate();
+// Load Stripe with your public key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-  const games = [
-    { id: 'juwa', name: 'Juwa', color: '#FF6B6B', description: 'Classic slots and casino games' },
-    { id: 'orionstar', name: 'OrionStar', color: '#4ECDC4', description: 'Space-themed gaming adventure' },
-    { id: 'gamevault', name: 'GameVault', color: '#45B7D1', description: 'Premium gaming collection' },
-    { id: 'milkyway', name: 'MilkyWay', color: '#96CEB4', description: 'Cosmic gaming experience' },
-    { id: 'firekirin', name: 'FireKirin', color: '#FFEAA7', description: 'Dragon-themed slot games' },
-    { id: 'pandamaster', name: 'PandaMaster', color: '#DDA0DD', description: 'Asian-inspired gaming' },
-    { id: 'vegassweep', name: 'VegasSweep', color: '#FFB347', description: 'Vegas-style casino games' },
-    { id: 'vblink', name: 'VBlink', color: '#87CEEB', description: 'Fast-paced gaming action' },
-    { id: 'gameroom', name: 'GameRoom', color: '#F0E68C', description: 'Multi-game platform' }
-  ];
+// Available games
+const games = {
+  juwa: 'Juwa',
+  orionstar: 'OrionStar',
+  gamevault: 'GameVault',
+  milkyway: 'MilkyWay',
+  firekirin: 'FireKirin',
+  pandamaster: 'PandaMaster',
+  vegassweep: 'VegasSweep',
+  vblink: 'VBlink',
+  gameroom: 'GameRoom'
+};
 
-  const handleGameSelect = (gameId) => {
-    navigate(`/amount/${gameId}`);
+const LoadCredits = () => {
+  const [selectedGame, setSelectedGame] = useState('');
+  const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleProceedToPayment = async () => {
+    const amountValue = parseFloat(amount);
+
+    // Basic validation
+    if (!selectedGame || !amountValue || amountValue < 1 || amountValue > 25) {
+      alert('Please select a game and enter a valid amount between $1 and $25.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('https://juwahouse.onrender.com/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          gameId: selectedGame,
+          gameName: games[selectedGame],
+          amount: amountValue
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.sessionId) {
+        throw new Error('Invalid Stripe session returned');
+      }
+
+      const stripe = await stripePromise;
+      const result = await stripe.redirectToCheckout({
+        sessionId: data.sessionId
+      });
+
+      if (result.error) {
+        alert(result.error.message);
+      }
+    } catch (error) {
+      console.error('Stripe Checkout Error:', error);
+      alert('Failed to initiate payment. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="game-selection">
-      <div className="header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          <ArrowLeft size={20} />
-          Back to Home
-        </button>
-        <h1 className="page-title">Choose Your Game</h1>
-        <p className="page-subtitle">Select a gaming platform to load credits</p>
-      </div>
+    <div className="load-credits">
+      <h1>Load Credits</h1>
 
-      <div className="container">
-        <div className="games-grid">
-          {games.map((game) => (
-            <div 
-              key={game.id}
-              className="game-card"
-              style={{ '--game-color': game.color }}
-              onClick={() => handleGameSelect(game.id)}
-            >
-              <div className="game-card-inner">
-                <div className="game-icon" style={{ backgroundColor: game.color }}>
-                  {game.name.charAt(0)}
-                </div>
-                <h3 className="game-name">{game.name}</h3>
-                <p className="game-description">{game.description}</p>
-                <div className="game-card-overlay">
-                  <span>Select Game</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <label>Choose Game:</label>
+      <select
+        value={selectedGame}
+        onChange={(e) => setSelectedGame(e.target.value)}
+      >
+        <option value="">-- Select Game --</option>
+        {Object.entries(games).map(([id, name]) => (
+          <option key={id} value={id}>
+            {name}
+          </option>
+        ))}
+      </select>
+
+      <label>Enter Amount ($1 - $25):</label>
+      <input
+        type="number"
+        min="1"
+        max="25"
+        step="0.01"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="e.g. 10"
+      />
+
+      <button
+        className="checkout-button"
+        disabled={!selectedGame || !amount || isLoading}
+        onClick={handleProceedToPayment}
+      >
+        {isLoading ? (
+          <>
+            <Loader size={20} className="loading-spinner" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <CreditCard size={20} />
+            Proceed to Payment
+          </>
+        )}
+      </button>
     </div>
   );
 };
 
-export default GameSelection;
+export default LoadCredits;

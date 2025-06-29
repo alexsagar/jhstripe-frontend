@@ -12,7 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/games" element={<GameSelection />} />
-        <Route path="/amount/:gameId" element={<AmountSelection />} />
+        {/* <Route path="/amount/:gameId" element={<AmountSelection />} /> */}
         <Route path="/success" element={<Success />} />
         <Route path="/cancel" element={<Cancel />} />
       </Routes>
